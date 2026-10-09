@@ -9,6 +9,7 @@ The hardware (PCB V1.1, Panel V1.1) is unchanged. The firmware in `arduino_code/
 - **12 patterns** instead of 6, with 6-8 step patterns and two random patterns (see the table under Features). The pattern CV now wraps around over the whole ADC range.
 - **Shorter interrupt:** the timer interrupt only detects clock/reset edges and drives the outputs. All analog reads happen in `loop()`, so clock and reset edges are no longer missed or delayed.
 - **Division hysteresis** on the division knobs, so a knob near a slot boundary no longer flickers between two divisions.
+- **Gate mute and deferred division:** the division knob has an extra end stop beyond ÷32 that mutes the channel's gate output. The sequencer keeps running silently, so the channel stays in time, and the CV and step LED still follow the steps. The knob now has 11 positions (off, ÷32 ... ÷1). A new position is only applied once the knob has rested there for about 0.5 s, so turning the knob through all divisions does not run through them.
 - **Code structure:** split into small modules in `arduino_code/src/` (`sequencer`, `channels`, `modes`, `inputs`, `shift`) instead of a single `.ino`, and built with PlatformIO (`arduino_code/platformio.ini`) instead of the Arduino IDE.
 
 ### Modes
@@ -32,6 +33,10 @@ To change the mode, hold the reset button for about one second (this acts as "sh
 | C | Chain all |
 
 While shift is held, the division knobs do not change any division, and a knob has to be turned a fair bit before it counts. When you release the button, the mode is saved. A knob that you turned keeps its previous division until you turn it back through the position it was at (pickup), so the division does not jump. If you turn no knob, nothing changes, so a long gate on the reset jack cannot change the mode by accident. There is no display for the mode, so listen to the outputs to check which one is active.
+
+### Tuning the division knobs
+
+The positions of the division knob (off, ÷32 ... ÷1) depend on the pots, so they are set in a table in the firmware: `divisionStart[]` in `arduino_code/src/inputs.cpp` lists the lowest ADC reading (0-1023) at which each position starts. If a division starts too early (the knob points to 3 but the division is 2), raise that entry; if it starts too late, lower it. The "off" stop at the low end is narrow on purpose, and ÷1 only gets the last few counts at the top of the travel. The ADC cannot read above 1023, so the ÷1 entry must stay below what a fully turned knob really reads. `DIV_SETTLE_MS` in the same file sets how long the knob must rest before a new division is applied.
 
 ### Sequencer
 

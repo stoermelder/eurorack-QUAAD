@@ -8,6 +8,10 @@
 /** Division per channel. Written in loop() with interrupts disabled, read in the ISR. */
 extern ClockDivider clockDivider[NUM_CHANNELS];
 
+/** Gate output of a channel is silent while muted; its sequencer keeps running.
+ *  Written in loop() with interrupts disabled, read in the ISR. */
+extern volatile bool channelMuted[NUM_CHANNELS];
+
 void channelsInit();
 
 /** Clock input went high: advance the shared clock counter (ISR context). */

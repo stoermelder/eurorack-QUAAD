@@ -5,7 +5,7 @@
 namespace {
 
 const unsigned long SHIFT_HOLD_MS = 1000;
-const int SHIFT_MOVE_THRESHOLD = 60; // counts a knob must move; above the division hysteresis (54)
+const int SHIFT_MOVE_THRESHOLD = 60; // counts a knob must move to count as turned
 
 bool resetHeld = false;
 unsigned long resetHeldSince = 0;

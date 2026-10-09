@@ -1,6 +1,7 @@
 #include "channels.h"
 
 ClockDivider clockDivider[NUM_CHANNELS];
+volatile bool channelMuted[NUM_CHANNELS] = {false, false, false, false};
 
 namespace {
 uint16_t clockCount = 0;
@@ -33,7 +34,9 @@ bool channelDue(uint8_t ch) {
 }
 
 bool channelTrigger(uint8_t ch) {
-	digitalWrite(pin_CLK_DIV_OUT[ch], HIGH);
+	if (!channelMuted[ch]) {
+		digitalWrite(pin_CLK_DIV_OUT[ch], HIGH);
+	}
 	// Mux code 0..3: bit 0 -> A, bit 1 -> B
 	bool atStart;
 	uint8_t code = sequencerNext(ch, atStart);
