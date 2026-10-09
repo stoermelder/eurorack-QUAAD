@@ -3,7 +3,7 @@
 namespace {
 
 const uint8_t PTRN_RANDOM = 0; // uniformly random step
-const uint8_t PTRN_WALK = 255; // random walk, +/-1 step (wraps 4 -> 1)
+const uint8_t PTRN_WALK = 255; // random walk, +/-1 step (bounces at the ends)
 const uint8_t PTRN_MAX_LEN = 8;
 
 struct Pattern {
@@ -62,7 +62,16 @@ uint8_t sequencerNext(uint8_t ch, bool &atStart) {
 		if (p.length == PTRN_RANDOM) {
 			return nextRandom() & 3;
 		}
-		walk_pos[ch] = (walk_pos[ch] + ((nextRandom() & 1) ? 1 : 3)) & 3;
+		// Step up or down at random; at the ends the only way is back, so it never jumps 4 <-> 1
+		if (walk_pos[ch] == 0) {
+			walk_pos[ch] = 1;
+		}
+		else if (walk_pos[ch] == 3) {
+			walk_pos[ch] = 2;
+		}
+		else {
+			walk_pos[ch] += (nextRandom() & 1) ? 1 : -1;
+		}
 		return walk_pos[ch];
 	}
 	// The pattern can change between clocks, so the position may be out of range

@@ -34,14 +34,17 @@ To change the mode, hold the reset button for about one second (this acts as "sh
 
 While shift is held, the division knobs do not change any division, and a knob has to be turned a fair bit before it counts. When you release the button, the mode is saved. A knob that you turned keeps its previous division until you turn it back through the position it was at (pickup), so the division does not jump. If you turn no knob, nothing changes, so a long gate on the reset jack cannot change the mode by accident. There is no display for the mode, so listen to the outputs to check which one is active.
 
-### Tuning the division knobs
+### Tuning the knobs
 
-The positions of the division knob (off, ÷32 ... ÷1) depend on the pots, so they are set in a table in the firmware: `divisionStart[]` in `arduino_code/src/inputs.cpp` lists the lowest ADC reading (0-1023) at which each position starts. If a division starts too early (the knob points to 3 but the division is 2), raise that entry; if it starts too late, lower it. The "off" stop at the low end is narrow on purpose, and ÷1 only gets the last few counts at the top of the travel. The ADC cannot read above 1023, so the ÷1 entry must stay below what a fully turned knob really reads. `DIV_SETTLE_MS` in the same file sets how long the knob must rest before a new division is applied.
+The knobs are not linear, so where each pattern and each division starts on the knob is set in tables in `arduino_code/src/calibration.h`: `patternStart[]` and `divisionStart[]` list the lowest ADC reading (0-1023) at which each position starts. If a position starts too early (the knob points to 3 but the division is 2), raise its entry, and the ones after it if you want to keep their widths; if it starts too late, lower it. This is the only place that needs to change for different pots or panel marks.
+
+- **Division knob** (off, ÷32 ... ÷1): the "off" stop at the low end is narrow on purpose, and ÷1 only gets the last few counts at the top of the travel. The ADC cannot read above 1023, so the ÷1 entry must stay below what a fully turned knob really reads. `DIV_SETTLE_MS` in `arduino_code/src/inputs.cpp` sets how long the knob must rest before a new division is applied.
+- **Pattern knob** (12 patterns): the last entry of `patternStart[]` is where the list repeats (master knob, more CV).
 
 ### Sequencer
 
 This module is basically 4 independent 4-step sequencers. Each of them features a CV output (0-5V), a clock divider (1-2-3-4-5-7-8-12-16-32 divisions) and a pattern setting.
-There are 12 patterns available. Patterns can be changed per-sequence via a dedicated knob or via CV, aswell as globally using the MSTR PTRN knob, which basically adds a CV offset to each of the pattern CV inputs. Each pattern takes about 1 V of the summed pattern input, so the full range of patterns can be accessed via the pot corresponding to pattern changes of individual sequencers, the MSTR PTRN knob or via CV. The patterns are looped, so that when, for example, you are on the last of the 12 patterns and add some positive CV offset, you will go back to the first one and then further on...
+There are 12 patterns available. Patterns can be changed per-sequence via a dedicated knob or via CV, aswell as globally using the MSTR PTRN knob, which basically adds a CV offset to each of the pattern CV inputs. The pattern knob alone covers all 12 patterns (about 0.4 V of the summed pattern input per pattern, so 0-5 V of CV covers them too); the position of each pattern on the knob is set in a table in `arduino_code/src/calibration.h` (`patternStart[]`), see below. The patterns are looped, so that when, for example, you are on the last of the 12 patterns and add some positive CV offset, you will go back to the first one and then further on...
 
 | # | Pattern | Steps |
 |---|---|---|
@@ -56,7 +59,7 @@ There are 12 patterns available. Patterns can be changed per-sequence via a dedi
 | 9 | repeats | 1-1-2-2-3-3-4-4 |
 | 10 | home base | 1-2-1-3-1-4 |
 | 11 | random | a random step on every clock |
-| 12 | random walk | moves one step up or down at random, wrapping from 4 to 1 |
+| 12 | random walk | moves one step up or down at random and turns around at the ends (no jump between 4 and 1) |
 
 Patterns 1-6 are the original patterns: no step order repeats between them. The step lists are defined in `patterns[]` in `arduino_code/src/sequencer.cpp`. A sequence is as long as its pattern (4, 6 or 8 steps); the two random patterns count as 4 steps when channels are chained.
 
