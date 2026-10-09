@@ -10,6 +10,11 @@ bool channelMuted[NUM_CHANNELS] = {false, false, false, false}; // ISR only
 volatile uint8_t pendingDivision[NUM_CHANNELS] = {1, 1, 1, 1};
 volatile bool pendingMuted[NUM_CHANNELS] = {false, false, false, false};
 volatile uint8_t pendingPattern[NUM_CHANNELS] = {0, 0, 0, 0};
+
+// Replace the two bits of `port` starting at `shift` with `code` in a single write
+inline void writeBits(volatile uint8_t &port, uint8_t shift, uint8_t code) {
+	port = (port & ~(0b11 << shift)) | (code << shift);
+}
 }
 
 void channelSetDivision(uint8_t ch, uint8_t division) {
@@ -33,11 +38,8 @@ void channelsApplySettings() {
 }
 
 void channelsInit() {
-	for (uint8_t i = 0; i < NUM_CHANNELS; i++) {
-		pinMode(pin_A[i], OUTPUT);
-		pinMode(pin_B[i], OUTPUT);
-		pinMode(pin_CLK_DIV_OUT[i], OUTPUT);
-	}
+	DDRD |= 0xFF;         // PD0..PD3 clock outs D..A, PD4..PD7 mux selects of A and B
+	DDRB |= 0b00111100;   // PB2..PB5 mux selects of C and D
 }
 
 void clockAdvance() {
@@ -60,18 +62,21 @@ bool channelDue(uint8_t ch) {
 
 bool channelTrigger(uint8_t ch) {
 	if (!channelMuted[ch]) {
-		digitalWrite(pin_CLK_DIV_OUT[ch], HIGH);
+		PORTD |= _BV(3 - ch);  // clock outs A..D = PD3..PD0
 	}
-	// Mux code 0..3: bit 0 -> A, bit 1 -> B
+	// Mux code 0..3: bit 0 -> A, bit 1 -> B. A and B are adjacent port bits,
+	// so one write switches both at once (no intermediate mux state).
 	bool atStart;
 	uint8_t code = sequencerNext(ch, atStart);
-	digitalWrite(pin_A[ch], code & 1);
-	digitalWrite(pin_B[ch], (code >> 1) & 1);
+	switch (ch) {
+		case 0: writeBits(PORTD, 4, code); break;  // PD4/PD5
+		case 1: writeBits(PORTD, 6, code); break;  // PD6/PD7
+		case 2: writeBits(PORTB, 2, code); break;  // PB2/PB3
+		default: writeBits(PORTB, 4, code); break; // PB4/PB5
+	}
 	return atStart;
 }
 
 void channelsGatesLow() {
-	for (uint8_t i = 0; i < NUM_CHANNELS; i++) {
-		digitalWrite(pin_CLK_DIV_OUT[i], LOW);
-	}
+	PORTD &= ~0x0F;  // all four clock outs (PD0..PD3) in one write
 }
