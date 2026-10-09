@@ -32,14 +32,12 @@ To change the mode, hold the reset button for about one second (this acts as "sh
 | B | Chain pairs |
 | C | Chain all |
 
-While shift is held, the division knobs do not change any division, and a knob has to be turned a fair bit before it counts. When you release the button, the mode is saved. A knob that you turned keeps its previous division until you turn it back through the position it was at (pickup), so the division does not jump. If you turn no knob, nothing changes, so a long gate on the reset jack cannot change the mode by accident. There is no display for the mode, so listen to the outputs to check which one is active.
+While shift is held, the division knobs do not change any division, and a knob has to be turned a fair bit before it counts. When you release the button, the mode is saved. A knob that you turned keeps its previous division until you turn it back through the position it was at (pickup), so the division does not jump. If you turn no knob, nothing changes.
 
-### Tuning the knobs
+The module cannot tell the button from the reset jack, so a gate on the reset jack that stays high for more than about one second also activates shift. While such a gate is high, the division knobs do not change the divisions, and turning one selects a mode instead. Avoid long gates on the reset input, or leave the division knobs alone while the gate is high.
 
-The knobs are not linear, so where each pattern and each division starts on the knob is set in tables in `arduino_code/src/calibration.h`: `patternStart[]` and `divisionStart[]` list the lowest ADC reading (0-1023) at which each position starts. If a position starts too early (the knob points to 3 but the division is 2), raise its entry, and the ones after it if you want to keep their widths; if it starts too late, lower it. This is the only place that needs to change for different pots or panel marks.
+There is no display for the mode, so listen to the outputs to check which one is active.
 
-- **Division knob** (off, ÷32 ... ÷1): the "off" stop at the low end is narrow on purpose, and ÷1 only gets the last few counts at the top of the travel. The ADC cannot read above 1023, so the ÷1 entry must stay below what a fully turned knob really reads. `DIV_SETTLE_MS` in `arduino_code/src/inputs.cpp` sets how long the knob must rest before a new division is applied.
-- **Pattern knob** (12 patterns): the last entry of `patternStart[]` is where the list repeats (master knob, more CV).
 
 ### Sequencer
 
@@ -65,6 +63,13 @@ Patterns 1-6 are the original patterns: no step order repeats between them. The 
 
 The sequencer can be reset via a gate or manually using a button.
 With nothing patched into the clock input, the module is clocked internally, the tempo can be set via a potentiometer. The clock output outputs this internal clock when no external clock input is patched in, otherwise, the incoming clock signal is buffered through this output.
+
+### Tuning the knobs
+
+The knobs are not linear, so where each pattern and each division starts on the knob is set in tables in `arduino_code/src/calibration.h`: `patternStart[]` and `divisionStart[]` list the lowest ADC reading (0-1023) at which each position starts. If a position starts too early (the knob points to 3 but the division is 2), raise its entry, and the ones after it if you want to keep their widths; if it starts too late, lower it. This is the only place that needs to change for different pots or panel marks.
+
+- **Division knob** (off, ÷32 ... ÷1): the "off" stop at the low end is narrow on purpose, and ÷1 only gets the last few counts at the top of the travel. The ADC cannot read above 1023, so the ÷1 entry must stay below what a fully turned knob really reads. `DIV_SETTLE_MS` in `arduino_code/src/inputs.cpp` sets how long the knob must rest before a new division is applied.
+- **Pattern knob** (12 patterns): the last entry of `patternStart[]` is where the list repeats (master knob, more CV).
 
 ## Hardware
 

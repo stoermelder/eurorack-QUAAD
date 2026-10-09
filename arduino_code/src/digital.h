@@ -73,22 +73,25 @@ struct SlotMap {
 	int slotOf(int reading) const {
 		if (!cyclic) {
 			int s = slots - 1;
-			while (s > 0 && reading < starts[s])
+			while (s > 0 && reading < starts[s]) {
 				s--;
+			}
 			return s;
 		}
 		int cycle = floorDiv(reading - starts[0], period());
 		int within = reading - cycle * period();
 		int s = slots - 1;
-		while (s > 0 && within < starts[s])
+		while (s > 0 && within < starts[s]) {
 			s--;
+		}
 		return cycle * slots + s;
 	}
 
 	/** Reading is within the slot, extended by `margin` on both sides. */
 	bool contains(int slot, int reading, int margin) const {
-		if (cyclic)
+		if (cyclic) {
 			return reading >= slotStart(slot) - margin && reading < slotStart(slot + 1) + margin;
+		}
 		return (slot == 0 || reading >= starts[slot] - margin)
 		    && (slot == slots - 1 || reading < starts[slot + 1] + margin);
 	}
@@ -154,10 +157,12 @@ struct SlotSelector {
 			since = now;
 		}
 
-		if (started && candidate == applied)
+		if (started && candidate == applied) {
 			return false;
-		if (started && now - since < SETTLE_MS)
+		}
+		if (started && now - since < SETTLE_MS) {
 			return false;
+		}
 		started = true;
 		applied = candidate;
 		return true;

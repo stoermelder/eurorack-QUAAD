@@ -30,8 +30,9 @@ const ChainLayout chainAll = {{FROM_CLOCK, 0, 1, 2}};            // A>B>C>D
 uint8_t chainPhase[NUM_CHANNELS]; // source sequences seen since the channel last fired, 0 = fires next
 
 void chainFire(const ChainLayout &layout, uint8_t ch) {
-	if (!channelTrigger(ch))
+	if (!channelTrigger(ch)) {
 		return; // not the start of a sequence
+	}
 	for (uint8_t t = 0; t < NUM_CHANNELS; t++) {
 		if (layout.source[t] != ch) {
 			continue;

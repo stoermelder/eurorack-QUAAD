@@ -47,8 +47,9 @@ void divisionInputUpdate(uint8_t ch) {
 	}
 	uint16_t division = divisions[divisionKnob[ch].value()];
 	bool muted = division == DIV_OFF;
-	if (!muted)
+	if (!muted) {
 		channelSetDivision(ch, division); // 0 would divide by zero in the ISR
+	}
 	channelSetMuted(ch, muted);
 }
 
