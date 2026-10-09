@@ -6,9 +6,8 @@
 
 constexpr uint8_t NUM_PATTERNS = 12; // checked against the table in sequencer.cpp
 
-// Selected pattern per channel (index into the pattern table).
-// Written in loop() with interrupts disabled, read in the ISR.
-extern volatile uint8_t pattern[NUM_CHANNELS];
+/** Selects the pattern (index into the pattern table) of channel `ch` (ISR context). */
+void sequencerSetPattern(uint8_t ch, uint8_t pattern);
 
 /** Rewinds all channels to their first step. */
 void sequencerReset();

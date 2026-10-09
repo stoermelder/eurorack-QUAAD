@@ -1,10 +1,35 @@
 #include "channels.h"
 
 ClockDivider clockDivider[NUM_CHANNELS];
-volatile bool channelMuted[NUM_CHANNELS] = {false, false, false, false};
 
 namespace {
 uint16_t clockCount = 0;
+bool channelMuted[NUM_CHANNELS] = {false, false, false, false}; // ISR only
+
+// Settings handed over by loop(), applied at the next clock tick
+volatile uint8_t pendingDivision[NUM_CHANNELS] = {1, 1, 1, 1};
+volatile bool pendingMuted[NUM_CHANNELS] = {false, false, false, false};
+volatile uint8_t pendingPattern[NUM_CHANNELS] = {0, 0, 0, 0};
+}
+
+void channelSetDivision(uint8_t ch, uint8_t division) {
+	pendingDivision[ch] = division;
+}
+
+void channelSetMuted(uint8_t ch, bool muted) {
+	pendingMuted[ch] = muted;
+}
+
+void channelSetPattern(uint8_t ch, uint8_t pattern) {
+	pendingPattern[ch] = pattern;
+}
+
+void channelsApplySettings() {
+	for (uint8_t i = 0; i < NUM_CHANNELS; i++) {
+		clockDivider[i].setDivision(pendingDivision[i]);
+		channelMuted[i] = pendingMuted[i];
+		sequencerSetPattern(i, pendingPattern[i]);
+	}
 }
 
 void channelsInit() {

@@ -1,4 +1,3 @@
-#include <util/atomic.h>
 #include "inputs.h"
 #include "channels.h"
 #include "shift.h"
@@ -31,10 +30,7 @@ void patternInputUpdate(uint8_t ch) {
 	if (!patternKnob[ch].update(analogRead(pin_PTRN[ch]), millis())) {
 		return;
 	}
-	uint8_t newPattern = patternKnob[ch].value();
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-		pattern[ch] = newPattern;
-	}
+	channelSetPattern(ch, patternKnob[ch].value());
 }
 
 void divisionInputUpdate(uint8_t ch) {
@@ -51,11 +47,9 @@ void divisionInputUpdate(uint8_t ch) {
 	}
 	uint16_t division = divisions[divisionKnob[ch].value()];
 	bool muted = division == DIV_OFF;
-	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-		if (!muted)
-			clockDivider[ch].setDivision(division); // 0 would divide by zero in the ISR
-		channelMuted[ch] = muted;
-	}
+	if (!muted)
+		channelSetDivision(ch, division); // 0 would divide by zero in the ISR
+	channelSetMuted(ch, muted);
 }
 
 void divisionInputHold(uint8_t ch) {

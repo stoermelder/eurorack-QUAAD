@@ -32,6 +32,7 @@ static_assert(sizeof(patterns) / sizeof(patterns[0]) == NUM_PATTERNS,
 uint8_t seq_pos[NUM_CHANNELS] = {0, 0, 0, 0};  // position within the step list
 uint8_t walk_pos[NUM_CHANNELS] = {0, 0, 0, 0}; // current step of the random walk
 uint8_t rnd_pos[NUM_CHANNELS] = {0, 0, 0, 0};  // position in the 4-step "sequence" of random patterns
+uint8_t pattern[NUM_CHANNELS] = {0, 0, 0, 0}; // selected pattern per channel
 uint8_t rng_state = 1;
 
 uint8_t nextRandom() {
@@ -44,7 +45,9 @@ uint8_t nextRandom() {
 
 } // namespace
 
-volatile uint8_t pattern[NUM_CHANNELS] = {0, 0, 0, 0};
+void sequencerSetPattern(uint8_t ch, uint8_t newPattern) {
+	pattern[ch] = newPattern;
+}
 
 void sequencerReset() {
 	for (uint8_t i = 0; i < NUM_CHANNELS; i++) {

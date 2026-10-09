@@ -3,7 +3,7 @@
 
 // Analog inputs, read in loop() (never in the ISR): pattern CV and division knobs.
 
-/** Reads the pattern input of channel `ch` and updates `pattern[ch]`. */
+/** Reads the pattern input of channel `ch` and hands it to the channel. */
 void patternInputUpdate(uint8_t ch);
 
 /** Reads the division knob of channel `ch` and updates its clock division.

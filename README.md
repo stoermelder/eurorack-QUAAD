@@ -7,7 +7,7 @@ The hardware (PCB V1.1, Panel V1.1) is unchanged. The firmware in `arduino_code/
 
 - **Modes:** besides the original behaviour there are two chaining modes, selected with a shift gesture on the reset button and the division knobs (see [Modes](#modes) below).
 - **12 patterns** instead of 6, with 6-8 step patterns and two random patterns (see the table under Features). The pattern CV now wraps around over the whole ADC range.
-- **Shorter interrupt:** the timer interrupt only detects clock/reset edges and drives the outputs. All analog reads happen in `loop()`, so clock and reset edges are no longer missed or delayed.
+- **Edge-triggered outputs:** the clock and reset inputs use a pin-change interrupt instead of polling in a timer interrupt, so the outputs follow the clock edge immediately. All analog reads happen in `loop()`; the knob results (division, mute, pattern) are applied at the start of the next clock tick, so nothing changes between two clock edges.
 - **Division hysteresis** on the division knobs, so a knob near a slot boundary no longer flickers between two divisions.
 - **Gate mute and deferred division:** the division knob has an extra end stop beyond ÷32 that mutes the channel's gate output. The sequencer keeps running silently, so the channel stays in time, and the CV and step LED still follow the steps. The knob now has 11 positions (off, ÷32 ... ÷1). A new position is only applied once the knob has rested there for about 0.5 s, so turning the knob through all divisions does not run through them.
 - **Code structure:** split into small modules in `arduino_code/src/` (`sequencer`, `channels`, `modes`, `inputs`, `shift`) instead of a single `.ino`, and built with PlatformIO (`arduino_code/platformio.ini`) instead of the Arduino IDE.
