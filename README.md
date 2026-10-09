@@ -5,7 +5,7 @@
 
 The hardware (PCB V1.1, Panel V1.1) is unchanged. The firmware in `arduino_code/` was rewritten and extended:
 
-- **Modes:** besides the original behaviour there are two chaining modes, selected with a shift gesture on the reset button and the division knobs (see [Modes](#modes) below).
+- **Modes:** besides the original behaviour there are two chaining modes and an oscillator mode, selected with a shift gesture on the reset button and the division knobs (see [Modes](#modes) below).
 - **12 patterns** instead of 6, with 6-8 step patterns and two random patterns (see the table under Features). The pattern CV now wraps around over the whole ADC range.
 - **Edge-triggered outputs:** the clock and reset inputs use a pin-change interrupt instead of polling in a timer interrupt, so the outputs follow the clock edge immediately. All analog reads happen in `loop()`; the knob results (division, mute, pattern) are applied at the start of the next clock tick, so nothing changes between two clock edges.
 - **Division hysteresis** on the division knobs, so a knob near a slot boundary no longer flickers between two divisions.
@@ -14,13 +14,14 @@ The hardware (PCB V1.1, Panel V1.1) is unchanged. The firmware in `arduino_code/
 
 ### Modes
 
-The module has three modes. The active mode is stored in the EEPROM and restored at power-up.
+The module has four modes. The active mode is stored in the EEPROM and restored at power-up.
 
 | Mode | Behaviour |
 |---|---|
 | **Normal** (default) | Four independent sequencers, all clocked by the clock input. |
 | **Chain pairs** | B is chained to A and D is chained to C. A and C are clocked by the clock input as usual; B and D are clocked by the completed sequences of A and C instead. |
 | **Chain all** | All channels are chained: A > B > C > D. Only A follows the clock input; B advances with the sequences of A, C with those of B, and D with those of C. |
+| **Oscillator** | Each channel switches its steps at audio rate: the CV output becomes a 4-level staircase wave. See below. |
 
 In the chain modes, a chained channel still uses its own division knob: set to 1 it advances one step on every sequence of the channel before it, set to 2 only on every second sequence, and so on. A sequence starts when the channel before it plays its first step, so after a reset the whole chain starts on the first clock. Chaining the channels gives long cycles, for example 4 x 4 x 4 x 4 = 256 clocks with all divisions at 1.
 
@@ -31,13 +32,11 @@ To change the mode, hold the reset button for about one second (this acts as "sh
 | A | Normal |
 | B | Chain pairs |
 | C | Chain all |
+| D | Oscillator |
 
 While shift is held, the division knobs do not change any division, and a knob has to be turned a fair bit before it counts. When you release the button, the mode is saved. A knob that you turned keeps its previous division until you turn it back through the position it was at (pickup), so the division does not jump. If you turn no knob, nothing changes.
 
 The module cannot tell the button from the reset jack, so a gate on the reset jack that stays high for more than about one second also activates shift. While such a gate is high, the division knobs do not change the divisions, and turning one selects a mode instead. Avoid long gates on the reset input, or leave the division knobs alone while the gate is high.
-
-There is no display for the mode, so listen to the outputs to check which one is active.
-
 
 ### Sequencer
 
@@ -63,6 +62,20 @@ Patterns 1-6 are the original patterns: no step order repeats between them. The 
 
 The sequencer can be reset via a gate or manually using a button.
 With nothing patched into the clock input, the module is clocked internally, the tempo can be set via a potentiometer. The clock output outputs this internal clock when no external clock input is patched in, otherwise, the incoming clock signal is buffered through this output.
+
+### Oscillator mode
+
+The four step knobs of a channel set the levels of its wave, the pattern sets the order they are played in, so random patterns become 4-level noise. The clock output carries a square wave at the same frequency.
+
+| Control | Function |
+|---|---|
+| Pattern knob + CV jack + master knob | Pitch, 1 V/oct, continuous (about 5 octaves over the knob, from C1 = 32.7 Hz). |
+| Division knob | Waveform: the 12 patterns, in 12 equal slots. |
+| Reset input / button | Hard sync: restarts all four voices on their first step. |
+| Clock input | Ignored. |
+
+The output is unipolar (0-5 V). Pitch resolution is limited by the ADC (about 0.4 semitone per count, averaged over 8 readings) and it is not calibrated; adjust `PITCH_OFFSET` and `PITCH_COUNTS_PER_VOLT_X10` in `calibration.h`.
+
 
 ### Tuning the knobs
 

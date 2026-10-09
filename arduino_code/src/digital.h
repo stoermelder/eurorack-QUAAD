@@ -138,6 +138,12 @@ struct SlotSelector {
 		return map->index(applied);
 	}
 
+	/** Forgets the applied slot: the next reading is applied immediately. */
+	void reset() {
+		started = false;
+		holding = false;
+	}
+
 	/** Freezes the selector until the knob is back at the applied slot (pickup). */
 	void hold() {
 		holding = true;

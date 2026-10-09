@@ -36,3 +36,8 @@ bool channelDue(uint8_t ch);
 bool channelTrigger(uint8_t ch);
 /** Clock input went low: lowers all gates. */
 void channelsGatesLow();
+
+/** Writes the step mux codes (0..3) and gates of all channels with one write per port, so all
+ *  outputs change at the same moment. `gates` has bit ch set for a high gate. Used by the
+ *  oscillator mode, where the outputs are driven continuously (ISR context). */
+void channelsWriteAll(const uint8_t codes[NUM_CHANNELS], uint8_t gates);

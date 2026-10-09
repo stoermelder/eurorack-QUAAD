@@ -45,3 +45,15 @@ const int patternStart[NUM_PATTERNS + 1] = {
 	479   // cycle repeats
 };
 constexpr SlotMap patternMap(patternStart, NUM_PATTERNS, true);
+
+
+// Oscillator mode: the division knob selects the waveform (pattern) in 12 equal slots.
+const int waveformStart[NUM_PATTERNS] = {
+	0, 85, 170, 256, 341, 426, 512, 597, 682, 768, 853, 938
+};
+constexpr SlotMap waveformMap(waveformStart, NUM_PATTERNS, false);
+
+// Oscillator mode pitch: the summed pattern input reads PITCH_OFFSET at 0 V and
+// PITCH_COUNTS_PER_VOLT_X10 / 10 counts per volt (1 V/oct). Adjust per module if tuning is off.
+const int PITCH_OFFSET = 309;
+const int PITCH_COUNTS_PER_VOLT_X10 = 294;

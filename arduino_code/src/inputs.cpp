@@ -2,6 +2,7 @@
 #include "channels.h"
 #include "shift.h"
 #include "calibration.h"
+#include "modes.h"
 
 namespace {
 
@@ -27,21 +28,33 @@ DivisionKnob divisionKnob[NUM_CHANNELS] = {
 } // namespace
 
 void patternInputUpdate(uint8_t ch) {
+	modes[currentMode].patternInput(ch);
+}
+
+void divisionInputUpdate(uint8_t ch) {
+	int reading = analogRead(pin_CLK_DIV_IN[ch]);
+	if (shiftActive()) {
+		shiftKnob(ch, reading); // the knob selects the mode instead of the division
+	}
+	else {
+		modes[currentMode].divisionInput(ch, reading);
+	}
+}
+
+void normalPatternInput(uint8_t ch) {
 	if (!patternKnob[ch].update(analogRead(pin_PTRN[ch]), millis())) {
 		return;
 	}
 	channelSetPattern(ch, patternKnob[ch].value());
 }
 
-void divisionInputUpdate(uint8_t ch) {
-	int reading = analogRead(pin_CLK_DIV_IN[ch]);
-
-	// Shift: the knob selects the mode instead of the division
-	if (shiftActive()) {
-		shiftKnob(ch, reading);
-		return;
+void normalPatternInputReset() {
+	for (uint8_t i = 0; i < NUM_CHANNELS; i++) {
+		patternKnob[i].reset();
 	}
+}
 
+void normalDivisionInput(uint8_t ch, int reading) {
 	if (!divisionKnob[ch].update(reading, millis())) {
 		return;
 	}

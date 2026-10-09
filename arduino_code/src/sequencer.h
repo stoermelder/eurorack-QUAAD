@@ -16,3 +16,6 @@ void sequencerReset();
  *  `atStart` is set to true if the step is the first of a sequence (the random patterns
  *  count as a sequence of 4 steps). */
 uint8_t sequencerNext(uint8_t ch, bool &atStart);
+
+/** Number of steps in one cycle of `pattern` (4 for the random patterns). */
+uint8_t sequencerLength(uint8_t pattern);

@@ -80,3 +80,11 @@ bool channelTrigger(uint8_t ch) {
 void channelsGatesLow() {
 	PORTD &= ~0x0F;  // all four clock outs (PD0..PD3) in one write
 }
+
+void channelsWriteAll(const uint8_t codes[NUM_CHANNELS], uint8_t gates) {
+	// PORTD: bits 0..3 = gates D..A, bits 4..7 = mux selects of A and B
+	PORTD = ((gates & 1) << 3) | ((gates & 2) << 1) | ((gates & 4) >> 1) | ((gates & 8) >> 3)
+	      | (codes[0] << 4) | (codes[1] << 6);
+	// PORTB: bits 2..5 = mux selects of C and D; bits 0/1 are the clock/reset inputs
+	PORTB = (PORTB & ~0b00111100) | (codes[2] << 2) | (codes[3] << 4);
+}

@@ -2,6 +2,8 @@
 #include <util/atomic.h>
 #include "modes.h"
 #include "channels.h"
+#include "osc.h"
+#include "inputs.h"
 
 namespace {
 
@@ -71,25 +73,43 @@ void chainOnReset() {
 	}
 }
 
+void noClock() {} // the clock input is not used in the oscillator mode
+
 } // namespace
 
 const ModeDef modes[NUM_MODES] = {
-	/* MODE_NORMAL */      {normalOnClock, nullptr},
-	/* MODE_CHAIN_PAIRS */ {chainPairsOnClock, chainOnReset},
-	/* MODE_CHAIN_ALL */   {chainAllOnClock, chainOnReset},
+	/* MODE_NORMAL */      {normalOnClock, nullptr, normalPatternInput, normalDivisionInput, nullptr, nullptr},
+	/* MODE_CHAIN_PAIRS */ {chainPairsOnClock, chainOnReset, normalPatternInput, normalDivisionInput, nullptr, nullptr},
+	/* MODE_CHAIN_ALL */   {chainAllOnClock, chainOnReset, normalPatternInput, normalDivisionInput, nullptr, nullptr},
+	/* MODE_OSCILLATOR */  {noClock, oscRestart, oscPatternInput, oscDivisionInput, oscEnter, oscExit},
 };
 
 volatile uint8_t currentMode = MODE_NORMAL;
 
+// Must run with interrupts disabled: the mode hooks change state the ISRs use
+static void switchMode(uint8_t mode) {
+	if (modes[currentMode].onExit) {
+		modes[currentMode].onExit();
+	}
+	currentMode = mode;
+	if (modes[mode].onEnter) {
+		modes[mode].onEnter();
+	}
+}
+
 void modeLoad() {
 	uint8_t stored = eeprom_read_byte((const uint8_t *)EEPROM_ADDR_MODE);
-	currentMode = stored < NUM_MODES ? stored : MODE_NORMAL;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		switchMode(stored < NUM_MODES ? stored : MODE_NORMAL);
+	}
 }
 
 void modeSave(uint8_t mode) {
 	if (mode >= NUM_MODES || mode == currentMode) {
 		return;
 	}
-	currentMode = mode;
+	ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+		switchMode(mode);
+	}
 	eeprom_update_byte((uint8_t *)EEPROM_ADDR_MODE, mode);
 }

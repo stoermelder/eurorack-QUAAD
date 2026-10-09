@@ -13,3 +13,11 @@ constexpr uint8_t pin_PTRN[NUM_CHANNELS] = {A4, A5, A2, A7};        // pattern C
 
 constexpr uint8_t pin_CLOCK = 9;
 constexpr uint8_t pin_RESET = 8; // jack or push button
+
+// Clock and reset inputs: PB1 and PB0, both on pin-change interrupt 0
+constexpr uint8_t RESET_BIT = _BV(PB0);
+constexpr uint8_t CLOCK_BIT = _BV(PB1);
+
+/** Selects which of the clock/reset inputs raise the pin-change interrupt (RESET_BIT, CLOCK_BIT),
+ *  and resyncs the edge detection to their current levels. */
+void pinChangeMask(uint8_t mask);

@@ -84,3 +84,8 @@ uint8_t sequencerNext(uint8_t ch, bool &atStart) {
 	atStart = seq_pos[ch] == 0;
 	return p.steps[seq_pos[ch]++];
 }
+
+uint8_t sequencerLength(uint8_t pattern) {
+	uint8_t length = patterns[pattern].length;
+	return length == PTRN_RANDOM || length == PTRN_WALK ? 4 : length;
+}
